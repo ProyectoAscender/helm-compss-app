@@ -2,14 +2,15 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 #oriolmac/compss-test:latest
+#registry.gitlab.bsc.es/ppc/benchmarks/smart-city/smart-city-compss:1.0-3.3-final2-arm
 image:
   repository: registry.gitlab.bsc.es/ppc/benchmarks/smart-city/smart-city-compss
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 1.0-3.3-final2-arm
+  tag: 1.0-3.3-final4-arm
 
 mqtt:
-  enabled: true
+  enabled: false
   image:
     repository: oriolmac/mqtt-broker
     tag: latest
@@ -34,13 +35,13 @@ compss:
       containerPort: 15000
       redisContainerPort: 6379
 
-    #scheduler_config:
-    #  vertical_scalability: "true"
+    scheduler_config:
+      vertical_scalability: "true"
+      vertical_increasing_cpus: 2 # (integer)
     #  vertical_scaling_up_taskThreshold: "115" # ~ 2 min 45s
-    #  vertical_increasing_cpus: 1 # (integer)
 
   worker:
-    number: 1
+    number: 2
     labels:
       node: worker
     resources:
@@ -64,11 +65,23 @@ app:
   params:
     mode: "udp"
     edge_ips : "agx13:8883"
-    exp_dir : "/root/.COMPSs/"
+    exp_dir : "/root/smart-city-compss/runs/exp"
     save_plot: "True"
     semantics: "True"
     alerts: "False"
 
 monitoring:
+  enabled: true
+  port: 15000
+  prometheusUrl: http://prometheus-kube-prometheus-prometheus.monitoring.svc:9090
+  image:
+    repository: oriolmac/monitoring-api
+    tag: latest-arm
+    pullPolicy: Always
   servicemonitor:
     releaseName: prometheus
+  namespace: monitoring
+  node:
+
+
+

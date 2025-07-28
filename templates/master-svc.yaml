@@ -23,3 +23,9 @@ spec:
     port: {{ .Values.compss.master.prometheusClient.containerPort }}
     targetPort: prometheus
   {{- end }}
+  {{- if .Values.monitoring.enabled }}
+  - name: monitoring
+    protocol: TCP
+    port: {{ .Values.monitoring.port }}
+    targetPort: monitoring
+  {{- end }}
