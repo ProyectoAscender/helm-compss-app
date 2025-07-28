@@ -135,7 +135,7 @@ spec:
           containerPort: 5001
         volumeMounts:
           - name: b2drop
-            mountPath: /root/smart-city-compss/data
+            mountPath: /root/smart-city-compss2/data
           - name: aplicacion
             mountPath: /root/smart-city-compss2
       {{- if and .Values.compss.master.volume }}
@@ -154,6 +154,6 @@ spec:
           type: Directory
       - name: aplicacion
         hostPath:
-          path: /home/omartinez/smart-city-compss
+          path: /home/vmasip/smart-city-compss
           type: Directory
       

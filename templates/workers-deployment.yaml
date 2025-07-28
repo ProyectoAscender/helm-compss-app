@@ -44,6 +44,10 @@ spec:
           name: 43002-port
         - containerPort: 49049
           name: 49049-port
+        volumeMounts:
+          - name: aplicacion
+            mountPath: /root/smart-city-compss2
+
       {{- if eq $.Values.compss.worker.prometheusClient.enabled true }}
       - name: redis-server
         image: "redis:latest"
@@ -64,5 +68,10 @@ spec:
         - containerPort: {{ $.Values.compss.worker.prometheusClient.containerPort }} 
           name: prometheus
       {{- end}}
+      volumes:
+        - name: aplicacion
+          hostPath:
+            path: /home/vmasip/smart-city-compss
+            type: Directory
 ---
 {{- end }}

@@ -26,7 +26,7 @@ compss:
       name: ssh
     # local volume in node where the master is executed
     volume:
-      localPath: /home/vmasip/Helm-compss-app/runs/exp  # it has to exist locally
+      localPath: /home/vmasip/smart-city-compss/runs/exp  # it has to exist locally
       node: agx12
     prometheusClient: 
       enabled: false
@@ -44,7 +44,7 @@ compss:
     labels:
       node: worker
     resources:
-      cpu: 2
+      cpu: 10
       memory: 4  # in gigabytes
     ports:
       name: ssh
@@ -59,7 +59,7 @@ compss:
 
 app:
   context:
-    folderPath: /root/smart-city-compss
+    folderPath: /root/smart-city-compss2
     file: src/main.py
   params:
     mode: "udp"
@@ -67,7 +67,7 @@ app:
     exp_dir : "/root/.COMPSs/"
     save_plot: "True"
     semantics: "True"
-    alerts: "True"
+    alerts: "False"
 
 monitoring:
   servicemonitor:
