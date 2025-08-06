@@ -74,7 +74,7 @@ spec:
       volumes:
       - name: aplicacion
         hostPath:
-          path: /home/omartinez/smart-city-compss
+          path: /home/{{ $.Values.username }}/smart-city-compss
           type: Directory
 ---
 {{- end }}

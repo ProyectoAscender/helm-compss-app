@@ -1,6 +1,12 @@
+kubectl get nodes
+
+kubectl apply -f runtimeclass.yaml
+
 kubectl create namespace smartcity
-helm install -n smartcity smartcity-compss .
+helm install -n smartcity smartcity-compss . --set username=$(whoami)
 kubectl get pods -n smartcity --watch
+kubectl logs -n smartcity smartcity-compss-master-<<XXXXXXXX>> -c master -f --since=1m
+kubectl describe pod -n smartcity smartcity-compss-master-<<XXXXXXXX>>
 
 helm uninstall smartcity-compss -n smartcity
 

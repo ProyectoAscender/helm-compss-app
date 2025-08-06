@@ -4,10 +4,10 @@
 #oriolmac/compss-test:latest
 #registry.gitlab.bsc.es/ppc/benchmarks/smart-city/smart-city-compss:1.0-3.3-final2-arm
 image:
-  repository: registry.gitlab.bsc.es/ppc/benchmarks/smart-city/smart-city-compss
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/proyectoascender/smart-city/smart-city-compss
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 1.0-3.3-final4-arm
+  tag: 1.1-3.3-arm-final
 
 mqtt:
   enabled: false
@@ -18,6 +18,8 @@ mqtt:
   port: 1883
   nodePort: 31883
 
+# template
+
 compss:
   # namespace: {}
   master:
@@ -27,8 +29,7 @@ compss:
       name: ssh
     # local volume in node where the master is executed
     volume:
-      localPath: /home/vmasip/smart-city-compss/runs/exp  # it has to exist locally
-      node: agx12
+      node: agx2
     prometheusClient: 
       enabled: false
       buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
@@ -60,15 +61,14 @@ compss:
 
 app:
   context:
-    folderPath: /root/smart-city-compss2
+    folderPath: /root/smart-city-compss
     file: src/main.py
   params:
     mode: "udp"
-    edge_ips : "agx13:8883"
+    edge_ips : "192.168.89.254:8883"
     exp_dir : "/root/smart-city-compss/runs/exp"
-    save_plot: "True"
-    semantics: "True"
-    alerts: "False"
+    save_results: "True"
+    only_results: "True"
 
 monitoring:
   enabled: true
