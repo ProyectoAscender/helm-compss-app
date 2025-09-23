@@ -61,6 +61,8 @@ compss:
   service:
     ssh: 22
 
+#Estos parametros son los mismos que en el archivo run.sh de smart-city-compss
+
 app:
   context:
     folderPath: /root/smart-city-compss
@@ -70,7 +72,11 @@ app:
     edge_ips : "192.168.89.254:8883"
     exp_dir : "/root/smart-city-compss/runs/exp"
     save_results: "True"
-    only_results: "True"
+    only_results: "False"
+    get_speed: "True" 
+    get_semantic: "True"
+    save_plot: "False"
+
 
 # Environment variables for Kafka configuration
 # These are read by get_kafka_config_from_env() in udp_handler.py

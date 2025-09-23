@@ -153,5 +153,5 @@ spec:
           type: Directory
       - name: aplicacion
         hostPath:
-          path: /home/{{ .Values.username }}/smart-city-compss
+          path: /home/{{ .Values.username }}/LIS/smart-city-compss #porque esta smarcity dentro de LIS
           type: Directory
