@@ -7,7 +7,8 @@ image:
   repository: ghcr.io/proyectoascender/smart-city/smart-city-compss
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 1.1-3.3-arm-final
+  # tag: 1.1-3.3-arm-final
+  tag: latest-LisDevelop
 
 mqtt:
   enabled: false
@@ -46,8 +47,8 @@ compss:
     labels:
       node: worker
     resources:
-      cpu: 10
-      memory: 4  # in gigabytes
+      cpu: 2
+      memory: 2  # in gigabytes
     ports:
       name: ssh
     prometheusClient: 
@@ -70,6 +71,32 @@ app:
     save_results: "True"
     only_results: "True"
 
+# Environment variables for Kafka configuration
+# These are read by get_kafka_config_from_env() in udp_handler.py
+environment:
+  # Kafka broker configuration
+  KAFKA_BOOTSTRAP_SERVERS: "ascender-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  KAFKA_TOPIC: "smartcity-tracking-topic"
+  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
+  
+  # Kafka performance tuning
+  KAFKA_FLUSH_INTERVAL: "100"    # Flush every N frames
+  KAFKA_AUTO_FLUSH: "true"       # Enable automatic flushing
+  
+  # Schema Registry configuration
+  USE_SCHEMA_REGISTRY: "true"
+  SCHEMA_REGISTRY_URL: "http://schema-registry.kafka.svc.cluster.local:8081"
+  AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
+
+# Sensitive configuration - will be created as Kubernetes secrets
+secrets:
+  kafka:
+    username: "smartcity"      # Replace with actual username
+    password: "TYcrni8MfT6IkHriRp9W0VC844EvseJB"      # Replace with actual password
+  schema_registry:
+    username: ""  # Optional - set if Schema Registry requires auth
+    password: ""  # Optional - set if Schema Registry requires auth
 monitoring:
   enabled: true
   port: 15000
