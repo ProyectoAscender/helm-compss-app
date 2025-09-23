@@ -3,6 +3,7 @@
 # Declare variables to be passed into your templates.
 #oriolmac/compss-test:latest
 #registry.gitlab.bsc.es/ppc/benchmarks/smart-city/smart-city-compss:1.0-3.3-final2-arm
+#HOLAMUNDO
 image:
   repository: ghcr.io/proyectoascender/smart-city/smart-city-compss
   pullPolicy: Always
