@@ -73,35 +73,40 @@ app:
     exp_dir : "/root/smart-city-compss/runs/exp"
     save_results: "True"
     only_results: "True"
-  username: "estibaliz"
+  
 
 
 # Environment variables for Kafka configuration
 # These are read by get_kafka_config_from_env() in udp_handler.py
+# Non-sensitive runtime config (ok to keep here or move to a ConfigMap)
 environment:
-  # Kafka broker configuration
+  # Basic Kafka Configuration
   KAFKA_BOOTSTRAP_SERVERS: "ascender-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
   KAFKA_TOPIC: "smartcity-tracking-topic"
-  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"   # or SASL_SSL/SSL/PLAINTEXT
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
   
-  # Kafka performance tuning
-  KAFKA_FLUSH_INTERVAL: "100"    # Flush every N frames
-  KAFKA_AUTO_FLUSH: "true"       # Enable automatic flushing
+  # Performance Settings
+  KAFKA_FLUSH_INTERVAL: "100"
+  KAFKA_AUTO_FLUSH: "true"
   
-  # Schema Registry configuration
+  # Schema Registry Configuration
   USE_SCHEMA_REGISTRY: "true"
   SCHEMA_REGISTRY_URL: "http://schema-registry.kafka.svc.cluster.local:8081"
   AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
 
-# Sensitive configuration - will be created as Kubernetes secrets
-secrets:
+# Tell the chart which existing Secrets to use for creds
+credentials:
   kafka:
-    username: "smartcity"      # Replace with actual username
-    password: "TYcrni8MfT6IkHriRp9W0VC844EvseJB"      # Replace with actual password
-  schema_registry:
-    username: ""  # Optional - set if Schema Registry requires auth
-    password: ""  # Optional - set if Schema Registry requires auth
+    secretName: kafka-scram-user        # <-- pre-created Secret
+    usernameKey: username
+    passwordKey: password
+  # schemaRegistry:
+  #   enabled: false                      # true if SR needs basic auth
+  #   secretName: schema-registry-cred
+  #   usernameKey: username
+  #   passwordKey: password
+
 
 monitoring:
   enabled: true

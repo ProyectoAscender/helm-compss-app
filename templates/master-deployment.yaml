@@ -103,6 +103,43 @@ spec:
           value: {{ .Release.Name }}
         - name: DEPLOYMENT_NAMESPACE
           value: {{ .Release.Namespace }}
+        ####################################################################
+        #Kafka Environment Configuration
+        ####################################################################
+        {{- if .Values.environment }}
+        # Kafka Environment Configuration
+        {{- range $key, $value := .Values.environment }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.credentials.kafka }}
+        # Kafka Credentials from Secret
+        - name: KAFKA_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.credentials.kafka.secretName }}
+              key: {{ .Values.credentials.kafka.usernameKey }}
+        - name: KAFKA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.credentials.kafka.secretName }}
+              key: {{ .Values.credentials.kafka.passwordKey }}
+        {{- end }}
+        {{- if and .Values.credentials.schemaRegistry .Values.credentials.schemaRegistry.enabled }}
+        # Schema Registry Credentials from Secret
+        - name: SCHEMA_REGISTRY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.credentials.schemaRegistry.secretName }}
+              key: {{ .Values.credentials.schemaRegistry.usernameKey }}
+        - name: SCHEMA_REGISTRY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.credentials.schemaRegistry.secretName }}
+              key: {{ .Values.credentials.schemaRegistry.passwordKey }}
+        {{- end }}
+        ###############################################
         command: [ "/opt/COMPSs/Runtime/scripts/system/kubernetes/master.sh" ]
         args: 
           - "{{ .Release.Namespace }}"
