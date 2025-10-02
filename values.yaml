@@ -1,12 +1,14 @@
-# Default values for compss-app.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-#oriolmac/compss-test:latest
-#registry.gitlab.bsc.es/ppc/benchmarks/smart-city/smart-city-compss:1.0-3.3-final2-arm
-# custom-values-production.yaml
-# Production configuration for smart-city-compss with Kafka integration
-
-# Container image configuration
+# ================================================================
+# HELM COMPSS APP - SMART CITY CONFIGURATION
+# ================================================================
+# Project: CONSER02023013OP. Lotes 1 Software ASCENDER BSC-CNS
+# Author: Estibaliz Echevarria
+# Date: October 1, 2025
+# Description: Production configuration for smart-city-compss with Kafka integration
+# Repository: ProyectoAscender/helm-compss-app
+# Branch: kafka
+# ================================================================
+#
 image:
   repository: ghcr.io/proyectoascender/smart-city/smart-city-compss
   pullPolicy: Always
@@ -50,8 +52,8 @@ compss:
     labels:
       node: worker
     resources:
-      cpu: 4
-      memory: 4  # in gigabytes
+      cpu: 2
+      memory: 2  # in gigabytes
     ports:
       name: ssh
     prometheusClient: 
@@ -101,11 +103,11 @@ credentials:
     secretName: kafka-scram-user        # <-- pre-created Secret
     usernameKey: username
     passwordKey: password
-  # schemaRegistry:
-  #   enabled: false                      # true if SR needs basic auth
-  #   secretName: schema-registry-cred
-  #   usernameKey: username
-  #   passwordKey: password
+  schemaRegistry:
+    enabled: false                      # true if SR needs basic auth
+    secretName: schema-registry-cred
+    usernameKey: username
+    passwordKey: password
 
 
 monitoring:
