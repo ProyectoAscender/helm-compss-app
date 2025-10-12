@@ -5,11 +5,11 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     release: {{ .Values.monitoring.servicemonitor.releaseName }}
-    {{- include "compss-smartcity.labels" . | nindent 4 }}
+    {{- include "compss-app.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{- include "compss-smartcity.labels" . | nindent 4 }}
+      {{- include "compss-app.labels" . | nindent 4 }}
   endpoints:
   - port: prometheus
     interval: 5s

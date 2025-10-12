@@ -9,10 +9,6 @@ spec:
     wf_id: {{ $.Release.Name }}
     role: master
   ports:
-  - name: port-5001
-    protocol: UDP
-    port: 5001
-    targetPort: 5001-port
   - name: port-43100
     protocol: TCP
     port: 43100
@@ -22,10 +18,4 @@ spec:
     protocol: TCP
     port: {{ .Values.compss.master.prometheusClient.containerPort }}
     targetPort: prometheus
-  {{- end }}
-  {{- if .Values.monitoring.enabled }}
-  - name: monitoring
-    protocol: TCP
-    port: {{ .Values.monitoring.port }}
-    targetPort: monitoring
   {{- end }}

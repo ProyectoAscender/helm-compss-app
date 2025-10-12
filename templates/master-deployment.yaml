@@ -4,7 +4,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   name: {{ .Release.Name }}-master
   labels:
-    {{- include "compss-smartcity.labels" . | nindent 4 }}
+    {{- include "compss-app.labels" . | nindent 4 }}
     app: compss 
     wf_id: {{ $.Release.Name }}
     role: master
@@ -22,11 +22,6 @@ spec:
         wf_id: {{ $.Release.Name }}
         role: master
     spec:
-      hostNetwork: true
-      dnsPolicy: "ClusterFirstWithHostNet"
-      runtimeClassName: nvidia  # nvidia Runtime container
-      imagePullSecrets:
-      - name: regcred
       serviceAccountName: {{ .Release.Name }}-sa
       initContainers:
       - name: wait-for-workers
@@ -50,18 +45,6 @@ spec:
         ports:
         - name: mqtt
           containerPort: {{ .Values.mqtt.port }}
-          protocol: TCP
-      {{- end }}
-      {{- if .Values.monitoring.enabled }}
-      - name: monitoring
-        image: "{{ .Values.monitoring.image.repository }}:{{ .Values.monitoring.image.tag }}"
-        imagePullPolicy: {{ .Values.monitoring.image.pullPolicy }}
-        env:
-          - name: PROMETHEUS_SERVER_URL
-            value: {{ .Values.monitoring.prometheusUrl | quote }}
-        ports:
-        - name: monitoring
-          containerPort: {{ .Values.monitoring.port }}
           protocol: TCP
       {{- end }}
       {{- if eq .Values.compss.master.prometheusClient.enabled true }}
@@ -88,13 +71,6 @@ spec:
         - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
           name: prometheus
       {{- end}}
-      - name: redis-server
-        image: "redis:latest"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["redis-server"]
-        ports:
-        - containerPort: {{ .Values.compss.master.prometheusClient.redisContainerPort }}
-          name: redis
       - name: master
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -115,43 +91,27 @@ spec:
           - "0"   # max_vms
           - "0"   # creation_time
           - "43100" # master port
-          {{- $schedparams := "" }}
-          {{- range $key, $value := .Values.compss.master.scheduler_config }}
-            {{- if ne $key "" }}  
-              {{- $schedparams = printf "%s%s=%v;" $schedparams $key $value }}
-            {{- end }}
+          {{- if .Values.decryptionPassword }}
+          - "{{ .Values.decryptionPassword }}"
+          {{- else}}
+          - ""
           {{- end }}
-          - "{{ $schedparams }}"
           {{- $params := "" }}
           {{- range $key, $value := .Values.app.params }}
             {{- if and (ne $key "") }}  
               {{- $params = printf "%s --%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
-          - "--scheduler_config_file={{ .Values.app.context.folderPath }}/sched.config --scheduler=es.bsc.compss.scheduler.lookahead.locality.LocalityTS -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
+          - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
         - name: 43100-port
           containerPort: 43100 
-        - name: 5001-port
-          containerPort: 5001
+      {{- if and .Values.compss.master.volume }}
         volumeMounts:
-          - name: b2drop
-            mountPath: /root/smart-city-compss/data
-          - name: aplicacion
-            mountPath: /root/smart-city-compss
-          - name: {{ .Release.Name }}-results
+          - name: master-results-pvc
             mountPath: /root/.COMPSs/ # mount path within the container 
       volumes:
-      {{- if .Values.compss.master.volume }}
-      - name: {{ .Release.Name }}-results
+      - name: master-results-pvc
         persistentVolumeClaim:
-          claimName: {{ .Release.Name }}-results
+          claimName: master-results-pvc
       {{- end }}
-      - name: b2drop
-        hostPath:
-          path: /mnt/b2drop/smartCity
-          type: Directory
-      - name: aplicacion
-        hostPath:
-          path: /home/{{ .Values.username }}/smart-city-compss
-          type: Directory

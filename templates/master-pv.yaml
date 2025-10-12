@@ -1,7 +1,8 @@
+{{- if and .Values.compss.master.volume }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ .Release.Name }}-results
+  name: master-results-pv
 spec:
   capacity:
     storage: 50Mi
@@ -11,7 +12,7 @@ spec:
   persistentVolumeReclaimPolicy: Delete
   storageClassName: local-storage
   local:
-    path: /home/{{ .Values.username }}/smart-city-compss/runs/exp   # mount path in the node 
+    path: {{ .Values.compss.master.volume.localPath }}   # mount path in the node 
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -20,3 +21,4 @@ spec:
           operator: In
           values:
           - {{ .Values.compss.master.volume.node }}
+{{- end }}

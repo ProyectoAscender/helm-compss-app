@@ -133,13 +133,3 @@ BSC b2drop is also mounted, so if machine has suffered a restart, check `/mnt/b2
 `sudo mount --all`.
 
 smart-city-compss saves results into same project folder, and because it's mounted, can be extracted also in `/home/$USER/smart-city-compss`, more specifically at `/home/$USER/smart-city-compss/runs/exp/` . 
-
-
-
-
-
-
-
-
-
-

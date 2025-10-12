@@ -1,8 +1,9 @@
+{{- if and .Values.compss.master.volume }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: {{ .Release.Name }}-results
+  name: master-results-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -10,3 +11,4 @@ spec:
     requests:
       storage: 50Mi
   storageClassName: local-storage
+{{- end }}
