@@ -12,8 +12,8 @@
 image:
   repository: ghcr.io/proyectoascender/smart-city/smart-city-compss
   pullPolicy: Always
-  # tag: 1.1-3.3-arm-final
-  tag: latest-LisDevelop # ✅ This is the actual existing tag
+  tag: 1.2-3.3
+  # tag: latest-LisDevelop # ✅ This is the actual existing tag
 
 mqtt:
   enabled: false
@@ -74,7 +74,10 @@ app:
     edge_ips : "192.168.89.254:8883"
     exp_dir : "/root/smart-city-compss/runs/exp"
     save_results: "True"
-    only_results: "True"
+    only_results: "False"
+    get_speed: "True" 
+    get_semantic: "True"
+
   
 
 
@@ -82,9 +85,10 @@ app:
 # These are read by get_kafka_config_from_env() in udp_handler.py
 # Non-sensitive runtime config (ok to keep here or move to a ConfigMap)
 environment:
+  USE_KAFKA: "true" # Si se prefiere guardar en TXT o kafka
   # Basic Kafka Configuration
   KAFKA_BOOTSTRAP_SERVERS: "ascender-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
-  KAFKA_TOPIC: "smartcity-tracking-topic-test"
+  KAFKA_TOPIC: "smartcity-tracking-topic"
   KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"   # or SASL_SSL/SSL/PLAINTEXT
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
   
@@ -94,8 +98,13 @@ environment:
   
   # Schema Registry Configuration
   USE_SCHEMA_REGISTRY: "true"
+  SCHEMA_REGISTRY_AVAILABLE: "true"
   SCHEMA_REGISTRY_URL: "http://schema-registry.kafka.svc.cluster.local:8081"
   AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
+ 
+
+
+  
 
 # Tell the chart which existing Secrets to use for creds
 credentials:
