@@ -74,7 +74,9 @@ app:
     edge_ips : "192.168.89.254:8883"
     exp_dir : "/root/smart-city-compss/runs/exp"
     save_results: "True"
-    only_results: "True"
+    only_results: "False"
+    get_speed: "True" 
+    get_semantic: "True"
 
 
   
