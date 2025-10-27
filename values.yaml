@@ -51,51 +51,9 @@ compss:
     number: 2
     labels:
       node: worker
-    # ===== Opción A (recomendada) - Formato estándar K8s =====
-    # Descomenta si tu chart mapea estos valores al contenedor 'worker'
     resources:
-      requests:
-        cpu: "1"
-        memory: "2Gi"
-        ephemeral-storage: "1Gi"
-      limits:
-        cpu: "2"
-        memory: "3Gi"
-        ephemeral-storage: "4Gi"
-    # ===== Forzar reparto entre nodos worker =====
-    # Solo programar en agx12 y nx12
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values: ["agx12", "nx12"]
-
-      # Evita que dos workers caigan en el mismo nodo si hay hueco en el otro
-      podAntiAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchLabels:
-                app: compss
-                role: worker
-            topologyKey: kubernetes.io/hostname
-
-    # Fuerza el reparto 1-y-1 cuando sea posible
-    topologySpreadConstraints:
-    - maxSkew: 1
-      topologyKey: kubernetes.io/hostname
-      whenUnsatisfiable: DoNotSchedule
-      labelSelector:
-        matchLabels:
-          app: compss
-          role: worker
-    # resources:
-    #   cpu: 2
-    #   memory: 2  # in gigabytes
+      cpu: 2
+      memory: 2  # in gigabytes
     ports:
       name: ssh
     prometheusClient: 
@@ -116,9 +74,8 @@ app:
     edge_ips : "192.168.89.254:8883"
     exp_dir : "/root/smart-city-compss/runs/exp"
     save_results: "True"
-    only_results: "False"
-    get_speed: "True" 
-    get_semantic: "True"
+    only_results: "True"
+
 
   
 
