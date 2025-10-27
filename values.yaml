@@ -1,14 +1,19 @@
-# Default values for compss-app.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-#oriolmac/compss-test:latest
-#registry.gitlab.bsc.es/ppc/benchmarks/smart-city/smart-city-compss:1.0-3.3-final2-arm
+# ================================================================
+# HELM COMPSS APP - SMART CITY CONFIGURATION
+# ================================================================
+# Project: CONSER02023013OP. Lotes 1 Software ASCENDER BSC-CNS
+# Author: Estibaliz Echevarria
+# Date: October 1, 2025
+# Description: Production configuration for smart-city-compss with Kafka integration
+# Repository: ProyectoAscender/helm-compss-app
+# Branch: kafka
+# ================================================================
+#
 image:
   repository: ghcr.io/proyectoascender/smart-city/smart-city-compss
   pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: 1.1-3.3-arm-final
-  # tag: latest-LisDevelop
+  tag: 1.2-3.3
+  # tag: latest-LisDevelop # ✅ This is the actual existing tag
 
 mqtt:
   enabled: false
@@ -69,34 +74,52 @@ app:
     edge_ips : "192.168.89.254:8883"
     exp_dir : "/root/smart-city-compss/runs/exp"
     save_results: "True"
-    only_results: "True"
+    only_results: "False"
+    get_speed: "True" 
+    get_semantic: "True"
+
+
+  
+
 
 # Environment variables for Kafka configuration
 # These are read by get_kafka_config_from_env() in udp_handler.py
+# Non-sensitive runtime config (ok to keep here or move to a ConfigMap)
 environment:
-  # Kafka broker configuration
+  USE_KAFKA: "true" # Si se prefiere guardar en TXT o kafka
+  # Basic Kafka Configuration
   KAFKA_BOOTSTRAP_SERVERS: "ascender-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
   KAFKA_TOPIC: "smartcity-tracking-topic"
-  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+  KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"   # or SASL_SSL/SSL/PLAINTEXT
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
   
-  # Kafka performance tuning
-  KAFKA_FLUSH_INTERVAL: "100"    # Flush every N frames
-  KAFKA_AUTO_FLUSH: "true"       # Enable automatic flushing
+  # Performance Settings
+  KAFKA_FLUSH_INTERVAL: "100"
+  KAFKA_AUTO_FLUSH: "true"
   
-  # Schema Registry configuration
+  # Schema Registry Configuration
   USE_SCHEMA_REGISTRY: "true"
+  SCHEMA_REGISTRY_AVAILABLE: "true"
   SCHEMA_REGISTRY_URL: "http://schema-registry.kafka.svc.cluster.local:8081"
-  AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
+  # AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
+ 
 
-# Sensitive configuration - will be created as Kubernetes secrets
-secrets:
+
+  
+
+# Tell the chart which existing Secrets to use for creds
+credentials:
   kafka:
-    username: "smartcity"      # Replace with actual username
-    password: "TYcrni8MfT6IkHriRp9W0VC844EvseJB"      # Replace with actual password
-  schema_registry:
-    username: ""  # Optional - set if Schema Registry requires auth
-    password: ""  # Optional - set if Schema Registry requires auth
+    secretName: kafka-scram-user        # <-- pre-created Secret
+    usernameKey: username
+    passwordKey: password
+  schemaRegistry:
+    enabled: false                      # true if SR needs basic auth
+    secretName: schema-registry-cred
+    usernameKey: username
+    passwordKey: password
+
+
 monitoring:
   enabled: true
   port: 15000
