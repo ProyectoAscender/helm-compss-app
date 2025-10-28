@@ -102,7 +102,7 @@ environment:
   SCHEMA_REGISTRY_AVAILABLE: "true"
   SCHEMA_REGISTRY_URL: "http://schema-registry.kafka.svc.cluster.local:8081"
   # AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
- 
+  AVRO_SCHEMA_SUBJECT: "smartcity-tracking-topic-value"
 
 
   
