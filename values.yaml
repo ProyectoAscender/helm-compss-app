@@ -110,9 +110,9 @@ environment:
 # Tell the chart which existing Secrets to use for creds
 credentials:
   kafka:
-    secretName: kafka-scram-user        # <-- pre-created Secret
-    usernameKey: username
-    passwordKey: password
+    secretName: smartcity               # <-- updated to use smartcity secret
+    username: "smartcity"               # <-- username value from values.yaml
+    passwordKey: password               # <-- use 'password' key from smartcity secret
   schemaRegistry:
     enabled: false                      # true if SR needs basic auth
     secretName: schema-registry-cred
