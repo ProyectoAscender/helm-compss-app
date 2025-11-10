@@ -48,10 +48,7 @@ spec:
         {{- if $.Values.credentials.kafka }}
         # Kafka Credentials from Secret
         - name: KAFKA_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ $.Values.credentials.kafka.secretName }}
-              key: {{ $.Values.credentials.kafka.usernameKey }}
+          value: {{ $.Values.credentials.kafka.username | quote }}
         - name: KAFKA_PASSWORD
           valueFrom:
             secretKeyRef:
