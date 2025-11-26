@@ -9,9 +9,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-      {{- include "compss-app.labels" . | nindent 4 }}
+      app.kubernetes.io/name: {{ include "compss-app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      metrics: "true"
   endpoints:
-  - port: prometheus
+  - port: monitoring
     interval: 5s
     scrapeTimeout: 5s
     path: /metrics

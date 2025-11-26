@@ -1,22 +1,36 @@
 # Default values for compss-app.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-#oriolmac/compss-test:latest
-#registry.gitlab.bsc.es/ppc/benchmarks/smart-city/smart-city-compss:1.0-3.3-final2-arm
+
 image:
-  repository: oriolmac/build-test
+  repository: oriolmac/compss-debug
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: latest
+  tag: test
 
 mqtt:
   enabled: false
   image:
-    repository: oriolmac/mqtt-broker
+    repository: eclipse-mosquitto
     tag: latest
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   port: 1883
   nodePort: 31883
+
+monitoring:
+  enabled: false
+  port: 15000
+  redis:
+    port: 6379
+  prometheusUrl: http://prometheus-kube-prometheus-prometheus.monitoring.svc:9090
+  image:
+    repository: oriolmac/compss-monitoring
+    tag: "1.0"
+    pullPolicy: Always
+  servicemonitor:
+    releaseName: prometheus
+  namespace: monitoring
+  node:
 
 compss:
   # namespace: {}
@@ -27,33 +41,18 @@ compss:
       name: ssh
     # local volume in node where the master is executed
     volume:
-      localPath: /home/omartinez/helm-results  # it has to exist locally
+      localPath: /home/omartinez/results-helm  # it has to exist locally
       node: agx13
-    prometheusClient: 
-      enabled: false
-      buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
-      containerPort: 15000
-      redisContainerPort: 6379
-
-    scheduler_config:
-    #  vertical_scalability: "true"
-    #  vertical_increasing_cpus: 2 # (integer)
-    #  vertical_scaling_up_taskThreshold: "115" # ~ 2 min 45s
 
   worker:
-    number: 2
+    number: 1
     labels:
       node: worker
     resources:
-      cpu: 2
-      memory: 4  # in gigabytes
+      cpu: 4
+      memory: 2  # in gigabytes
     ports:
       name: ssh
-    prometheusClient: 
-      enabled: false
-      buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
-      containerPort: 15000
-      redisContainerPort: 6379
 
   service:
     ssh: 22
@@ -66,19 +65,3 @@ app:
     num_blocks: "3"
     elems_per_block: "1024"
     number_iterations: "1"
-
-monitoring:
-  enabled: false
-  port: 15000
-  prometheusUrl: http://prometheus-kube-prometheus-prometheus.monitoring.svc:9090
-  image:
-    repository: oriolmac/monitoring-api
-    tag: latest-arm
-    pullPolicy: Always
-  servicemonitor:
-    releaseName: prometheus
-  namespace: monitoring
-  node:
-
-
-

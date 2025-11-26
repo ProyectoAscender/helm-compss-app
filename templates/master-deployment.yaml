@@ -43,34 +43,34 @@ spec:
         image: "{{ .Values.mqtt.image.repository }}:{{ .Values.mqtt.image.tag }}"
         imagePullPolicy: {{ .Values.mqtt.image.pullPolicy }}
         ports:
-        - name: mqtt
-          containerPort: {{ .Values.mqtt.port }}
-          protocol: TCP
+          - name: mqtt
+            containerPort: {{ .Values.mqtt.port }}
+            protocol: TCP
+        volumeMounts:
+          - name: mosquitto-config
+            mountPath: /mosquitto/config/mosquitto.conf
+            subPath: mosquitto.conf
       {{- end }}
-      {{- if eq .Values.compss.master.prometheusClient.enabled true }}
+      {{- if .Values.monitoring.enabled }}
+      - name: monitoring
+        image: "{{ .Values.monitoring.image.repository }}:{{ .Values.monitoring.image.tag }}"
+        imagePullPolicy: {{ .Values.monitoring.image.pullPolicy }}
+        env:
+          - name: PROMETHEUS_SERVER_URL
+            value: {{ .Values.monitoring.prometheusUrl | quote }}
+        ports:
+        - name: monitoring
+          containerPort: {{ .Values.monitoring.port }}
+          protocol: TCP
+    
       - name: redis-server
         image: "redis:latest"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: ["redis-server"]
         ports:
-        - containerPort: {{ .Values.compss.master.prometheusClient.redisContainerPort }}
+        - containerPort: {{ .Values.monitoring.redis.port }}
           name: redis
-      - name: prometheus-client
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: 
-          - "python3"
-          - "{{ .Values.app.context.folderPath }}/metrics_client_counter_final.py"
-          - "--redis_port"
-          - "{{ .Values.compss.master.prometheusClient.redisContainerPort }}"
-          - "--prometheus_port"
-          - "{{ .Values.compss.master.prometheusClient.containerPort }}"
-          #- "--buckets"
-          #- "{{ .Values.compss.master.prometheusClient.buckets }}"
-        ports:
-        - containerPort: {{ .Values.compss.master.prometheusClient.containerPort }}
-          name: prometheus
-      {{- end}}
+      {{- end }}
       - name: master
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -91,18 +91,20 @@ spec:
           - "0"   # max_vms
           - "0"   # creation_time
           - "43100" # master port
-          {{- if .Values.decryptionPassword }}
-          - "{{ .Values.decryptionPassword }}"
-          {{- else}}
-          - ""
+          {{- $schedparams := "" }}
+          {{- range $key, $value := .Values.compss.master.scheduler_config }}
+            {{- if ne $key "" }}  
+              {{- $schedparams = printf "%s%s=%v;" $schedparams $key $value }}
+            {{- end }}
           {{- end }}
+          - "{{ $schedparams }}"
           {{- $params := "" }}
           {{- range $key, $value := .Values.app.params }}
             {{- if and (ne $key "") }}  
               {{- $params = printf "%s --%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
-          - "-d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
+          - "--scheduler_config_file={{ .Values.app.context.folderPath }}/sched.config --scheduler=es.bsc.compss.scheduler.lookahead.locality.LocalityTS -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
         - name: 43100-port
           containerPort: 43100 
@@ -114,4 +116,10 @@ spec:
       - name: master-results-pvc
         persistentVolumeClaim:
           claimName: master-results-pvc
+      {{- end }}
+      {{- if .Values.mqtt.enabled }}
+      volumes:
+      - name: mosquitto-config
+        configMap:
+          name: {{ .Release.Name }}-mosquitto-config
       {{- end }}

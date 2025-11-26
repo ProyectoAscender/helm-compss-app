@@ -13,9 +13,9 @@ spec:
     protocol: TCP
     port: 43100
     targetPort: 43100-port
-  {{- if eq .Values.compss.master.prometheusClient.enabled true }}
-  - name: prometheus
+  {{- if .Values.monitoring.enabled }}
+  - name: monitoring
     protocol: TCP
-    port: {{ .Values.compss.master.prometheusClient.containerPort }}
-    targetPort: prometheus
+    port: {{ .Values.monitoring.port }}
+    targetPort: monitoring
   {{- end }}

@@ -28,18 +28,7 @@ spec:
       - name: worker
         image: {{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}
         imagePullPolicy: {{ $.Values.image.pullPolicy }}
-        {{- if $.Values.decryptionPassword }}
-        command:
-        - "bash"
-        - "-c"
-        - |
-          export PYTHONPATH="/opt/COMPSs/Bindings/python/3" && \
-          openssl enc -aes-256-cbc -d -salt -pbkdf2 -in '/root/.kube/config.enc' -out '/root/.kube/config' -pass pass:'{{ $.Values.decryptionPassword }}' && \
-          openssl enc -aes-256-cbc -d -salt -pbkdf2 -in '/root/.lithops/config.enc' -out '/root/.lithops/config' -pass pass:'{{ $.Values.decryptionPassword }}' && \
-          /usr/sbin/sshd -D
-        {{- else }}
         command: [ "/usr/sbin/sshd",  "-D" ]
-        {{- end }}
         resources:
           limits:
             memory: {{ $.Values.compss.worker.resources.memory }}G
@@ -53,25 +42,5 @@ spec:
           name: 43002-port
         - containerPort: 49049
           name: 49049-port
-      {{- if eq $.Values.compss.worker.prometheusClient.enabled true }}
-      - name: redis-server
-        image: "redis:latest"
-        imagePullPolicy: {{ $.Values.image.pullPolicy }}
-        command: ["redis-server"]
-        ports:
-        - containerPort: {{ $.Values.compss.worker.prometheusClient.redisContainerPort }}
-          name: redis
-      - name: prometheus-client
-        image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
-        imagePullPolicy: {{ $.Values.image.pullPolicy }}
-        command: 
-          - "python3"
-          - "{{ $.Values.app.context.folderPath }}/metrics_client.py"
-          - "--buckets"
-          - "{{ $.Values.compss.worker.prometheusClient.buckets }}"
-        ports:
-        - containerPort: {{ $.Values.compss.worker.prometheusClient.containerPort }} 
-          name: prometheus
-      {{- end}}
 ---
 {{- end }}

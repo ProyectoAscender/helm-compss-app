@@ -1,5 +1,29 @@
 # Execute a COMPSs application in Kubernetes
 
+Prerequisite: You need to have Helm installed in your system to deploy this chart.
+Helm is a package manager for Kubernetes that allows you to define, install, and upgrade complex Kubernetes applications.
+
+Note: In order to launch the actual execution, a decryption password is required.
+This password is used to decrypt the Kubernetes and Lithops configuration files, which are encrypted for security reasons.
+Make sure to provide the decryptionPassword field in the values.yaml file before deploying the application.
+
+---
+
+## How to securely provide credentials without additional files
+You can securely inject sensitive values, such as Docker registry credentials and Ceph access keys, at deploy time by setting them in a secrets.yaml file. This file is committed only once as a template and then excluded from future commits using Git's assume-unchanged flag. This approach helps prevent accidental commits of sensitive information.
+
+By externalizing secrets in this way, you avoid storing them in Git or hardcoding them into configuration files. Instead, Helm securely injects them at deployment time and can automatically generate the corresponding Kubernetes Secrets.
+
+Example (default namespace):
+```
+helm install <deploy_name> . -f secrets.yaml
+```
+
+Example (specific namespace):
+```
+helm install <deploy_name> . -n <namespace> -f secrets.yaml
+```
+
 URL to download the Chart locally
 ```
 git clone git@github.com:VERGE-PROJECT/Helm-compss-app.git
@@ -49,87 +73,3 @@ As for the `compss.master.volume` of the master, you have to check:
 1. The `compss.master.volume.localPath` exists locally on the `compss.master.volume.node`.
 2. The `compss.master.volume.node` is a the name of one of the nodes of your cluster (you can check with `kubectl get nodes`). Kubernetes will deploy the master pod in the node specified. 
 
-## Smart-city | Ascender
-
-If you have already recieved k8s .conf file, install [k8s](https://v1-32.docs.kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-kubectl-on-linux) and [helm](https://helm.sh/es/docs/intro/install/#desde-apt-debianubuntu) client in your local machine. Place config file at `~/.kube/config`.
-
-These are a few useful commands for k8s and helm. 
-
-List nodes of the cluster.
-
-`kubectl get nodes`
-
-
-Create your own execution "context":
-
-`kubectl create namespace ${USER}-smartcity`
-
-If you've done a docker login,you can give same credential access to k8s:
-
-`kubectl -n ${USER}-smartcity create secret generic regcred --from-file=.dockerconfigjson=/home/vmasip/.docker/config.json --type=kubernetes.io/dockerconfigjson`
-
-Deploy the pods with helm:
-
-`helm install -n ${USER}-smartcity smartcity-compss . --set username=$(whoami)`
-
-where `.` is pointing to the path of the helm project you want to deploy. 
-
-List the pods:
-
-`kubectl get pods -n ${USER}-smartcity --watch`
-
-Check deploying:
-
-`kubectl describe pod -n ${USER}-smartcity smartcity-compss-master-<<XXXXXXXX>>`
-
-Once the pod is initiated, it's container logs can be accessed:
-
-`kubectl logs -n ${USER}-smartcity smartcity-compss-master-<<XXXXXXXX>> -c master -f`
-
-One useful addition to kubectl logs to get latest minute of logs and not all of it:
-`--since=1m`
-
-If you want to stop the process, execute:
-
-`helm uninstall smartcity-compss -n ${USER}-smartcity`
-
-and list/watch pods untils it's completely uninstalled.
-
-
-This project and it's templates can deploy smart-city. At `values.yaml`smart-city-compss arguments can be easily modified:
-```
-app:
-  context:
-    folderPath: /root/smart-city-compss
-    file: src/main.py
-  params:
-    mode: "udp"
-    edge_ips : "192.168.89.254:8883"
-    exp_dir : "/root/smart-city-compss/runs/exp"
-    save_results: "True"
-    only_results: "True"
-```
-
-So, if you deploy the emulation of video-camera at nx12, and camera-edge at agx12, edge_ips shall contain agx12 ip. `8883` is portCommunicator camera-edge project. 
-
-
-Normally, k8s is prepared to deploy a docker image with app/software contained in it. To avoid the pipeline:
-`code modification -> modify image -> docker push -> k8s docker pull`
-for every minor modification, this helm project doesn't use smart-city image internal `/root/smart-city-compss`, instead, it is overwritten with a volume mount:
-
-
-```
-  - name: aplicacion
-        hostPath:
-          path: /home/{{ .Values.username }}/smart-city-compss
-          type: Directory
-```
-
-Because at `values.yaml`the master node is stablished as `àgx2`, `/home/$USER/smart-city-compss` of agx2 will be mounted into master and worker pods. 
-
-Summary: can connect vscode to agx2:/home/$USER/smart-city-compss, and deploy every modification done there into k8s with the helm install command previously comemented. 
-
-BSC b2drop is also mounted, so if machine has suffered a restart, check `/mnt/b2drop/smartCity`. Normally if it's empty, it's easily to configure with:
-`sudo mount --all`.
-
-smart-city-compss saves results into same project folder, and because it's mounted, can be extracted also in `/home/$USER/smart-city-compss`, more specifically at `/home/$USER/smart-city-compss/runs/exp/` . 
