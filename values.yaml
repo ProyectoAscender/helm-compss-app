@@ -89,7 +89,7 @@ environment:
   USE_KAFKA: "true" # Si se prefiere guardar en TXT o kafka
   # Basic Kafka Configuration
   KAFKA_BOOTSTRAP_SERVERS: "ascender-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
-  KAFKA_TOPIC: "smartcity-tracking-topic"
+  KAFKA_TOPIC: "smartcity-tracking-topic-dev"
   KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"   # or SASL_SSL/SSL/PLAINTEXT
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
   
@@ -102,7 +102,7 @@ environment:
   SCHEMA_REGISTRY_AVAILABLE: "true"
   SCHEMA_REGISTRY_URL: "http://schema-registry.kafka.svc.cluster.local:8081"
   # AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
-  AVRO_SCHEMA_SUBJECT: "smartcity-tracking-topic-value"
+  AVRO_SCHEMA_SUBJECT: "smartcity-tracking-topic-dev-value"
 
 
   
