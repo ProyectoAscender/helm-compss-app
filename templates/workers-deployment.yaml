@@ -32,7 +32,7 @@ spec:
         resources:
           limits:
             memory: {{ $.Values.compss.worker.resources.memory }}G
-            cpu: {{ $.Values.compss.worker.resources.cpu }}
+            cpu: {{ $.Values.compss.worker.resources.k8sCpuLimit }}
         ports:
         - containerPort: 22
           name: 22-port

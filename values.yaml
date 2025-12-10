@@ -3,10 +3,10 @@
 # Declare variables to be passed into your templates.
 
 image:
-  repository: oriolmac/compss-debug
-  pullPolicy: IfNotPresent
+  repository: oriolmac/compss-matmul
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: test
+  tag: 3.3
 
 mqtt:
   enabled: false
@@ -18,7 +18,7 @@ mqtt:
   nodePort: 31883
 
 monitoring:
-  enabled: false
+  enabled: true
   port: 15000
   redis:
     port: 6379
@@ -49,8 +49,13 @@ compss:
     labels:
       node: worker
     resources:
-      cpu: 4
-      memory: 2  # in gigabytes
+      k8sCpuLimit: 4          # Real CPU limit assigned by Kubernetes to the pod
+      compssStartingCpus: 2   # Number of CPUs COMPSs will start and use inside the container
+      k8sMemoryLimit: 2       # Real memory limit (GB) assigned by Kubernetes to the pod
+
+      # (W.I.P)
+      #compssStartingMemory: 2    # Memory (GB) COMPSs will assume/use internally
+
     ports:
       name: ssh
 
@@ -63,5 +68,5 @@ app:
     file: matmul.py
   params:
     num_blocks: "3"
-    elems_per_block: "1024"
-    number_iterations: "1"
+    elems_per_block: "512"
+    number_iterations: "15"
