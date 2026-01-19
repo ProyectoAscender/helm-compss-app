@@ -1,0 +1,51 @@
+{{- if .Values.cameraEdge.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-camera-edge
+  labels:
+    app: camera-edge
+    wf_id: {{ $.Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: camera-edge
+      wf_id: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: camera-edge
+        wf_id: {{ $.Release.Name }}
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      nodeName: {{ .Values.cameraEdge.nodeName }}    # Ejecutar en agx01
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      runtimeClassName: nvidia                       # runtime nvidia
+
+      containers:
+      - name: camera-edge
+        image: "{{ .Values.cameraEdge.image }}"
+        imagePullPolicy: IfNotPresent
+
+        env:
+        - name: CAMERA
+          value: "{{ .Values.cameraEdge.cameraId }}"
+        - name: USER
+          value: "{{ .Values.username }}"
+
+        # ENTRYPOINT ya definido en la imagen, no hace falta command/args
+
+        volumeMounts:
+        - name: b2drop
+          mountPath: /root/b2drop
+
+      volumes:
+      - name: b2drop
+        hostPath:
+          path: "{{ .Values.cameraEdge.hostPathB2Drop }}"
+          type: Directory
+{{- end }}

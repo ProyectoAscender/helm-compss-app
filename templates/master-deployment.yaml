@@ -184,8 +184,8 @@ spec:
       - name: b2drop
         hostPath:
           path: /mnt/b2drop/smartCity
-          type: Directory
+          type: DirectoryOrCreate
       - name: aplicacion
         hostPath:
-          path: /home/{{ .Values.username }}/smart-city-compss #porque esta smarcity dentro de LIS
+          path: /home/{{ .Values.username }}/smart-city-compss/ #porque esta smarcity dentro de LIS
           type: Directory
