@@ -33,9 +33,7 @@ compss:
       node: master
     ports:
       name: ssh
-    # local volume in node where the master is executed
-    volume:
-      node: agx01
+    node: agx01
     prometheusClient: 
       enabled: false
       buckets: "-inf, 0.0001, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.1, 1, 10, 50, 100, 200, inf" # Histogram bucket
@@ -85,10 +83,7 @@ app:
     get_speed: "True" 
     get_semantic: "True"
     print_time: "False"
-
-
-  
-
+    save_plot: "False"
 
 # Environment variables for Kafka configuration
 # These are read by get_kafka_config_from_env() in udp_handler.py
@@ -97,7 +92,7 @@ environment:
   USE_KAFKA: "true" # Si se prefiere guardar en TXT o kafka
   # Basic Kafka Configuration
   KAFKA_BOOTSTRAP_SERVERS: "ascender-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
-  KAFKA_TOPIC: "smartcity-tracking-topic-dev"
+  KAFKA_TOPIC: "smartcity-tracking-topic"
   KAFKA_SECURITY_PROTOCOL: "SASL_PLAINTEXT"   # or SASL_SSL/SSL/PLAINTEXT
   KAFKA_SASL_MECHANISM: "SCRAM-SHA-512"
   
@@ -109,8 +104,7 @@ environment:
   USE_SCHEMA_REGISTRY: "true"
   SCHEMA_REGISTRY_AVAILABLE: "true"
   SCHEMA_REGISTRY_URL: "http://schema-registry.kafka.svc.cluster.local:8081"
-  # AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
-  AVRO_SCHEMA_SUBJECT: "smartcity-tracking-topic-dev-value"
+  AVRO_SCHEMA_SUBJECT: "smartcity-tracking-schema"
 
 
   

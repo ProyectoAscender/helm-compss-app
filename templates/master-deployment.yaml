@@ -22,6 +22,7 @@ spec:
         wf_id: {{ $.Release.Name }}
         role: master
     spec:
+      nodeName: {{ .Values.compss.master.node }}
       hostNetwork: true
       dnsPolicy: "ClusterFirstWithHostNet"
       runtimeClassName: nvidia  # nvidia Runtime container
@@ -176,11 +177,10 @@ spec:
           - name: {{ .Release.Name }}-results
             mountPath: /root/.COMPSs/ # mount path within the container 
       volumes:
-      {{- if .Values.compss.master.volume }}
       - name: {{ .Release.Name }}-results
-        persistentVolumeClaim:
-          claimName: {{ .Release.Name }}-results
-      {{- end }}
+        hostPath:
+          path: /home/{{ .Values.username }}/smart-city-compss/runs/exp/compss-logs/
+          type: DirectoryOrCreate
       - name: b2drop
         hostPath:
           path: /mnt/b2drop/smartCity
