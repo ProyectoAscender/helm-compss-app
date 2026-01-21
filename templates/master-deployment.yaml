@@ -163,7 +163,7 @@ spec:
               {{- $params = printf "%s --%s %s" $params $key $value }}  
             {{- end }}
           {{- end }}
-          - "--scheduler_config_file={{ .Values.app.context.folderPath }}/sched.config --scheduler=es.bsc.compss.scheduler.lookahead.locality.LocalityTS -d -t -g {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
+          - "--scheduler_config_file={{ .Values.app.context.folderPath }}/sched.config --scheduler=es.bsc.compss.scheduler.lookahead.locality.LocalityTS {{ .Values.app.context.folderPath }}/{{ .Values.app.context.file }}{{ $params }}"
         ports:
         - name: 43100-port
           containerPort: 43100 
