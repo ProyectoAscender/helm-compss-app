@@ -304,6 +304,211 @@ Port exposed:
 
 ---
 
+# Runtime Scaling Control
+
+The deployment includes a **runtime scaling controller** that allows dynamically adjusting the number of workers or the CPU resources assigned to them.
+
+Scaling decisions are provided through the **Monitoring API**, which is periodically polled by the COMPSs scheduler component (`ExternalScalingService`).
+
+The scheduler polls the following endpoint every few seconds:
+
+```
+GET /trigger
+```
+
+This endpoint returns the current scaling decision.
+
+Example response:
+
+```json
+{
+  "decision_id": 42,
+  "action": "scale_out",
+  "target": "agx13",
+  "amount": 1,
+  "cpus": 4
+}
+```
+
+After applying the scaling action, the scheduler acknowledges it through:
+
+```
+POST /ack
+```
+
+This prevents the same decision from being executed multiple times.
+
+---
+
+# Scaling Actions
+
+The system supports **four scaling operations**:
+
+| Action       | Description                              |
+| ------------ | ---------------------------------------- |
+| `scale_up`   | Increase CPU units of an existing worker |
+| `scale_down` | Decrease CPU units of an existing worker |
+| `scale_out`  | Add new worker pods                      |
+| `scale_in`   | Remove worker pods                       |
+
+Scaling commands are sent through:
+
+```
+POST /set_action
+```
+
+---
+
+# Horizontal Scaling
+
+Horizontal scaling changes the number of worker pods.
+
+## Scale Out (Add Workers)
+
+Adds new worker pods.
+
+Example:
+
+```bash
+curl -X POST http://<master-ip>:15000/set_action \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "scale_out",
+    "target": "agx13",
+    "amount": 1,
+    "cpus": 4
+  }'
+```
+
+Parameters:
+
+| Field    | Description                           |
+| -------- | ------------------------------------- |
+| `amount` | number of new worker pods             |
+| `cpus`   | CPU units assigned to each COMPSs worker |
+
+---
+
+## Scale In (Remove Workers)
+
+Removes worker pods from the cluster.
+
+Example:
+
+```bash
+curl -X POST http://<master-ip>:15000/set_action \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "scale_in",
+    "target": "compss-worker-3",
+    "amount": 1
+  }'
+```
+
+Parameters:
+
+| Field    | Description                 |
+| -------- | --------------------------- |
+| `amount` | number of workers to remove |
+
+The runtime selects **non-critical dynamic workers** to remove. If there are no non-critical dynamic workers, COMPSs will not execute the pending worker reduction (scale in) for safety reasons.
+
+---
+
+# Vertical Scaling
+
+Vertical scaling modifies the CPU resources of existing workers.
+
+## Scale Up (Increase CPU)
+
+Adds CPU computing units to a worker.
+
+Example:
+
+```bash
+curl -X POST http://<master-ip>:15000/set_action \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "scale_up",
+    "target": "compss-worker-0",
+    "cpus": 2
+  }'
+```
+
+Parameters:
+
+| Field    | Description      |
+| -------- | ---------------- |
+| `target` | worker name      |
+| `cpus`   | CPU units to add |
+
+---
+
+## Scale Down (Reduce CPU)
+
+Removes CPU computing units from a worker.
+
+Example:
+
+```bash
+curl -X POST http://<master-ip>:15000/set_action \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "scale_down",
+    "target": "compss-worker-0",
+    "cpus": 1
+  }'
+```
+
+Parameters:
+
+| Field    | Description         |
+| -------- | ------------------- |
+| `target` | worker name         |
+| `cpus`   | CPU units to remove |
+
+---
+
+# No Scaling Action
+
+If no scaling action is required, the monitoring API returns:
+
+```json
+{
+  "action": "none"
+}
+```
+
+In this case the scheduler does nothing.
+
+---
+
+# Scaling Workflow
+
+The runtime scaling workflow is:
+
+```
+Monitoring API
+      │
+      │  POST /set_action
+      ▼
+Scaling state stored
+      │
+      │  polled every few seconds
+      ▼
+ExternalScalingService (COMPSs scheduler)
+      │
+      │  executes scaling
+      ▼
+Kubernetes cluster
+      │
+      │  POST /ack
+      ▼
+Scaling state reset
+```
+
+This mechanism allows scaling decisions to be controlled externally (for example by monitoring metrics or custom controllers).
+
 # Prometheus Metrics
 
 The chart deploys a `ServiceMonitor` resource for Prometheus Operator integration.
