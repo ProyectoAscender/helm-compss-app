@@ -60,3 +60,39 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Build final worker list:
+- If .Values.worker.workers exists -> use it, requiring hostname (or name).
+- Else generate N workers with name worker-<i>.
+Each worker element will have:
+  - name (string)  : used in svc/deploy names and labels
+  - resources (map): merged with defaults in .Values.worker.resources
+  - nodeSelector (optional)
+*/}}
+{{- define "compss-app.workersFinal" -}}
+{{- $root := . -}}
+{{- $defaults := dict "resources" ($root.Values.worker.resources | default dict) -}}
+
+{{- if and $root.Values.worker.workers (gt (len $root.Values.worker.workers) 0) -}}
+  {{- $out := list -}}
+  {{- range $w := $root.Values.worker.workers -}}
+    {{- $name := (coalesce $w.hostname $w.name) -}}
+    {{- if not $name -}}
+      {{- fail "worker.workers[] requires hostname (or name) when provided" -}}
+    {{- end -}}
+    {{- $merged := mergeOverwrite (deepCopy $defaults) $w -}}
+    {{- $_ := set $merged "name" $name -}}
+    {{- $out = append $out $merged -}}
+  {{- end -}}
+{{ toYaml $out }}
+{{- else -}}
+  {{- $n := int ($root.Values.worker.number | default 1) -}}
+  {{- $out := list -}}
+  {{- range $i := until $n -}}
+    {{- $w := mergeOverwrite (deepCopy $defaults) (dict "name" (printf "worker-%d" $i)) -}}
+    {{- $out = append $out $w -}}
+  {{- end -}}
+{{ toYaml $out }}
+{{- end -}}
+{{- end }}

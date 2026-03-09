@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 
 image:
-  repository: oriolmac/compss-debug
-  pullPolicy: IfNotPresent
+  repository: oriolmac/compss-matmul
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: test
 
@@ -18,7 +18,7 @@ mqtt:
   nodePort: 31883
 
 monitoring:
-  enabled: false
+  enabled: true
   port: 15000
   redis:
     port: 6379
@@ -33,6 +33,11 @@ monitoring:
   node:
 
 compss:
+  cloud:
+    minVms: 0
+    maxVms: 4
+    creationTime: 0
+
   # namespace: {}
   master:
     labels:
@@ -41,21 +46,40 @@ compss:
       name: ssh
     # local volume in node where the master is executed
     volume:
-      localPath: /home/omartinez/results-helm  # it has to exist locally
+      localPath: /home/omartinez/results-heterogeneous  # it has to exist locally
       node: agx13
 
   worker:
-    number: 1
-    labels:
-      node: worker
-    resources:
-      cpu: 4
-      memory: 2  # in gigabytes
+    # HOMOGENEOUS CLUSTER
+    #number: 2
+    #resources:
+    #  k8sCpuLimit: "4"          # **Currently deactivated** # Real CPU limit assigned by Kubernetes to the pod
+    #  k8sMemoryLimit: "2Gi"     # **Currently deactivated** #  Real memory limit (GB) assigned by Kubernetes to the pods
+    #  compssStartingCpus: "2"   # Number of CPUs COMPSs will start and use inside the container
+    #  compssStartingMemory: "2" # Available memory COMPSs will start and use inside the container
+
+    # HETEROGENEOUS CLUSTER
+    workers:
+      - hostname: agx13
+        resources:
+          k8sCpuLimit: "4"           # **Currently deactivated**
+          k8sMemoryLimit: "2Gi"      # **Currently deactivated**
+          compssStartingCpus: "2"
+          compssStartingMemory: "2"
+          
+      - hostname: radxa
+        resources:
+          k8sCpuLimit: "1"           # **Currently deactivated**
+          k8sMemoryLimit: "2Gi"      # **Currently deactivated**
+          compssStartingCpus: "1"
+          compssStartingMemory: "1"
+        
     ports:
       name: ssh
 
   service:
     ssh: 22
+
 
 app:
   context:
@@ -63,5 +87,5 @@ app:
     file: matmul.py
   params:
     num_blocks: "3"
-    elems_per_block: "1024"
-    number_iterations: "1"
+    elems_per_block: "512"
+    number_iterations: "40"

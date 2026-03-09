@@ -1,26 +1,32 @@
-{{- $workerCount := .Values.compss.worker.number | int }}  
-{{- range $i := until $workerCount }} 
+{{- $root := . -}}
+{{- $vals := (toYaml .Values | fromYaml) -}}
+
+{{- $workers := (dig "compss" "worker" "workers" (list) $vals) -}}
+{{- $hasWorkers := gt (len $workers) 0 -}}
+{{- $n := ternary (len $workers) ((dig "compss" "worker" "number" 1 $vals) | int) $hasWorkers -}}
+
+{{- range $i := until $n }}
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: {{ $.Release.Namespace }}
-  name: {{ $.Release.Name }}-worker-{{ $i }}
+  namespace: {{ $root.Release.Namespace }}
+  name: {{ $root.Release.Name }}-worker-{{ $i }}
   labels:
-    {{- include "compss-app.labels" $ | nindent 4 }}
+    {{- include "compss-app.labels" $root | nindent 4 }}
 spec:
   selector:
-    app: compss 
-    wf_id: {{ $.Release.Name }}
+    app: compss
+    wf_id: {{ $root.Release.Name }}
     role: worker-{{ $i }}
   ports:
   - name: port-22
     protocol: TCP
     port: 22
     targetPort: 22-port
-  - name: port-43001  
+  - name: port-43001
     protocol: TCP
     port: 43001
-    targetPort: 43001-port 
+    targetPort: 43001-port
   - name: port-43002
     protocol: TCP
     port: 43002

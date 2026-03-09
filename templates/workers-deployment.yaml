@@ -1,38 +1,58 @@
-{{- $workerCount := .Values.compss.worker.number | int }}  
-{{- range $i := until $workerCount }} 
+{{- $root := . -}}
+{{- $vals := (toYaml .Values | fromYaml) -}}
+
+{{- $workers := $root.Values.compss.worker.workers -}}
+{{- $hasWorkers := and $workers (gt (len $workers) 0) -}}
+
+{{- $globalCpu := (dig "compss" "worker" "resources" "k8sCpuLimit" "" $vals) | toString -}}
+{{- $globalMem := (dig "compss" "worker" "resources" "k8sMemoryLimit" "" $vals) | toString -}}
+
+{{- if $hasWorkers -}}
+  {{- range $i, $w := $workers }}
+
+{{- $cpu := (dig "resources" "k8sCpuLimit" $globalCpu $w) | toString -}}
+{{- $mem := (dig "resources" "k8sMemoryLimit" $globalMem $w) | toString -}}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: {{ $.Release.Namespace }}
-  name: {{ $.Release.Name }}-worker-{{ $i }}
+  namespace: {{ $root.Release.Namespace }}
+  name: {{ $root.Release.Name }}-worker-{{ $i }}
   labels:
-    {{- include "compss-app.labels" $ | nindent 4 }}
+    {{- include "compss-app.labels" $root | nindent 4 }}
     app: compss
-    wf_id: {{ $.Release.Name }}
+    wf_id: {{ $root.Release.Name }}
     role: worker-{{ $i }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: compss
-      wf_id: {{ $.Release.Name }}
+      wf_id: {{ $root.Release.Name }}
       role: worker-{{ $i }}
   template:
     metadata:
       labels:
-        app: compss 
-        wf_id: {{ $.Release.Name }}
+        app: compss
+        wf_id: {{ $root.Release.Name }}
         role: worker-{{ $i }}
     spec:
+      {{- if $w.hostname }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ $w.hostname }}
+      {{- end }}
       containers:
       - name: worker
-        image: {{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}
-        imagePullPolicy: {{ $.Values.image.pullPolicy }}
-        command: [ "/usr/sbin/sshd",  "-D" ]
+        image: {{ $root.Values.image.repository }}:{{ $root.Values.image.tag | default $root.Chart.AppVersion }}
+        imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+        command: ["/usr/sbin/sshd","-D"]
         resources:
-          limits:
-            memory: {{ $.Values.compss.worker.resources.memory }}G
-            cpu: {{ $.Values.compss.worker.resources.cpu }}
+          #requests:
+          #  cpu: {{ required "Missing compss.worker.resources.k8sCpuLimit or compss.worker.workers[].resources.k8sCpuLimit" $cpu | quote }}
+          #  memory: {{ required "Missing compss.worker.resources.k8sMemoryLimit or compss.worker.workers[].resources.k8sMemoryLimit" $mem | quote }}
+          #limits:
+          #  cpu: {{ required "Missing compss.worker.resources.k8sCpuLimit or compss.worker.workers[].resources.k8sCpuLimit" $cpu | quote }}
+          #  memory: {{ required "Missing compss.worker.resources.k8sMemoryLimit or compss.worker.workers[].resources.k8sMemoryLimit" $mem | quote }}
         ports:
         - containerPort: 22
           name: 22-port
@@ -43,4 +63,56 @@ spec:
         - containerPort: 49049
           name: 49049-port
 ---
+  {{- end }}
+
+{{- else -}}
+  {{- $workerCount := ($root.Values.compss.worker.number | default 1) | int -}}
+  {{- range $i := until $workerCount }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ $root.Release.Namespace }}
+  name: {{ $root.Release.Name }}-worker-{{ $i }}
+  labels:
+    {{- include "compss-app.labels" $root | nindent 4 }}
+    app: compss
+    wf_id: {{ $root.Release.Name }}
+    role: worker-{{ $i }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: compss
+      wf_id: {{ $root.Release.Name }}
+      role: worker-{{ $i }}
+  template:
+    metadata:
+      labels:
+        app: compss
+        wf_id: {{ $root.Release.Name }}
+        role: worker-{{ $i }}
+    spec:
+      containers:
+      - name: worker
+        image: {{ $root.Values.image.repository }}:{{ $root.Values.image.tag | default $root.Chart.AppVersion }}
+        imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+        command: ["/usr/sbin/sshd","-D"]
+        resources:
+          #requests:
+          #  cpu: {{ $root.Values.compss.worker.resources.k8sCpuLimit | quote }}
+          #  memory: {{ $root.Values.compss.worker.resources.k8sMemoryLimit | quote }}
+          #limits:
+          #  cpu: {{ $root.Values.compss.worker.resources.k8sCpuLimit | quote }}
+          #  memory: {{ $root.Values.compss.worker.resources.k8sMemoryLimit | quote }}
+        ports:
+        - containerPort: 22
+          name: 22-port
+        - containerPort: 43001
+          name: 43001-port
+        - containerPort: 43002
+          name: 43002-port
+        - containerPort: 49049
+          name: 49049-port
+---
+  {{- end }}
 {{- end }}

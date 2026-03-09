@@ -1,3 +1,45 @@
+{{- $root := . -}}
+{{- $vals := (toYaml .Values | fromYaml) -}}
+
+{{- $workers := (dig "compss" "worker" "workers" (list) $vals) -}}
+{{- $hetero := gt (len $workers) 0 -}}
+{{- $n := ternary (len $workers) ((dig "compss" "worker" "number" 1 $vals) | int) $hetero -}}
+
+{{- $defaultCpus := (dig "compss" "worker" "resources" "compssStartingCpus" "" $vals) | toString -}}
+{{- $defaultMem  := (dig "compss" "worker" "resources" "compssStartingMemory" "" $vals) | toString -}}
+
+{{- $cpusList := "" -}}
+{{- $memList := "" -}}
+
+{{- if $hetero -}}
+  {{- $cpus := list -}}
+  {{- $mems := list -}}
+  {{- range $i, $w := $workers -}}
+    {{- $c := (dig "resources" "compssStartingCpus" $defaultCpus $w) | toString -}}
+    {{- $m := (dig "resources" "compssStartingMemory" $defaultMem $w) | toString -}}
+    {{- $cpus = append $cpus $c -}}
+    {{- $mems = append $mems $m -}}
+  {{- end -}}
+  {{- $cpusList = join "," $cpus -}}
+  {{- $memList  = join "," $mems -}}
+
+  {{- /* Validación: no permitir elementos vacíos en listas */ -}}
+  {{- if or (eq $cpusList "") (contains ",," (printf ",%s," $cpusList)) -}}
+    {{- fail "Invalid compssStartingCpus list. Define compss.worker.resources.compssStartingCpus or workers[].resources.compssStartingCpus for every worker." -}}
+  {{- end -}}
+  {{- if or (eq $memList "") (contains ",," (printf ",%s," $memList)) -}}
+    {{- fail "Invalid compssStartingMemory list. Define compss.worker.resources.compssStartingMemory or workers[].resources.compssStartingMemory for every worker." -}}
+  {{- end -}}
+{{- else -}}
+  {{- /* Homogéneo: exigir defaults */ -}}
+  {{- if eq $defaultCpus "" -}}
+    {{- fail "Missing compss.worker.resources.compssStartingCpus (homogeneous mode)" -}}
+  {{- end -}}
+  {{- if eq $defaultMem "" -}}
+    {{- fail "Missing compss.worker.resources.compssStartingMemory (homogeneous mode)" -}}
+  {{- end -}}
+{{- end -}}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,7 +72,7 @@ spec:
           - sh
           - -c
           - |
-            for i in $(seq 1 {{ $.Values.compss.worker.number }}); do
+            for i in $(seq 1 {{ $n }}); do
               worker_index=$((i - 1))
               until nslookup {{ .Release.Name }}-worker-${worker_index}.{{ .Release.Namespace }}.svc.cluster.local; do
                 echo "Waiting for {{ .Release.Name }}-worker-${worker_index}";
@@ -82,14 +124,19 @@ spec:
         command: [ "/opt/COMPSs/Runtime/scripts/system/kubernetes/master.sh" ]
         args: 
           - "{{ .Release.Namespace }}"
-          - "{{ .Values.compss.worker.number }}"
-          - "{{ .Values.compss.worker.resources.cpu }}"
-          - "{{ .Values.compss.worker.resources.memory }}"
+          - "{{ $n }}"
+          {{- if $hetero }}
+          - "{{ $cpusList }}"
+          - "{{ $memList }}"
+          {{- else }}
+          - "{{ $defaultCpus }}"
+          - "{{ $defaultMem }}"
+          {{- end }}
           - "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           - "{{ .Values.app.context.folderPath }}"  # app_dir
-          - "0"   # min_vms
-          - "0"   # max_vms
-          - "0"   # creation_time
+          - "{{ dig "compss" "cloud" "minVms" 0 $vals }}"
+          - "{{ dig "compss" "cloud" "maxVms" 0 $vals }}"
+          - "{{ dig "compss" "cloud" "creationTime" 0 $vals }}"
           - "43100" # master port
           {{- $schedparams := "" }}
           {{- range $key, $value := .Values.compss.master.scheduler_config }}
