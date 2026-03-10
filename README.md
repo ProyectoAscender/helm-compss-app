@@ -367,7 +367,7 @@ Horizontal scaling changes the number of worker pods.
 
 Adds new worker pods.
 
-Example:
+Example Scaling Out: Adding 2 non-critical COMPSs pod worker (amount) with 4 CPUs per each (cpus) in a specific node/machine (target):
 
 ```bash
 curl -X POST http://<master-ip>:15000/set_action \
@@ -375,7 +375,20 @@ curl -X POST http://<master-ip>:15000/set_action \
   -d '{
     "action": "scale_out",
     "target": "agx13",
-    "amount": 1,
+    "amount": 2,
+    "cpus": 4
+  }'
+```
+
+Example Scaling Out: Adding 2 non-critical COMPSs pod worker (amount) with 4 CPUs per each (cpus) in any available node/machine:
+
+```bash
+curl -X POST http://<master-ip>:15000/set_action \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "scale_out",
+    "target": "all",
+    "amount": 2,
     "cpus": 4
   }'
 ```
@@ -393,7 +406,7 @@ Parameters:
 
 Removes worker pods from the cluster.
 
-Example:
+Example Scaling In: Removing a specific non-critical COMPSs pod worker (target):
 
 ```bash
 curl -X POST http://<master-ip>:15000/set_action \
@@ -402,6 +415,17 @@ curl -X POST http://<master-ip>:15000/set_action \
     "action": "scale_in",
     "target": "compss-worker-3",
     "amount": 1
+  }'
+```
+
+Example Scaling In: Removing 2 non-critical COMPSs worker pods (amount) without a specific target:
+```bash
+curl -X POST http://<master-ip>:15000/set_action \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "scale_in",
+    "target": "all",
+    "amount": 2
   }'
 ```
 
@@ -423,14 +447,14 @@ Vertical scaling modifies the CPU resources of existing workers.
 
 Adds CPU computing units to a worker.
 
-Example:
-
+Example Scaling Up: Adding 2 additional CPUs (cpus) to the COMPSs pod worker (target).
 ```bash
 curl -X POST http://<master-ip>:15000/set_action \
   -H "Content-Type: application/json" \
   -d '{
     "action": "scale_up",
-    "target": "compss-worker-0",
+    "target": "compss-worker-2",
+    "amount": 1,
     "cpus": 2
   }'
 ```
@@ -448,15 +472,15 @@ Parameters:
 
 Removes CPU computing units from a worker.
 
-Example:
-
+Example Scaling Up: Removing 2 CPUs (cpus) from the COMPSs pod worker (target).
 ```bash
 curl -X POST http://<master-ip>:15000/set_action \
   -H "Content-Type: application/json" \
   -d '{
     "action": "scale_down",
-    "target": "compss-worker-0",
-    "cpus": 1
+    "target": "compss-worker-2",
+    "amount": 1,
+    "cpus": 2
   }'
 ```
 
