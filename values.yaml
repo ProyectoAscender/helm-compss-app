@@ -6,7 +6,7 @@ image:
   repository: oriolmac/compss-matmul
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: test
+  tag: ascender
 
 mqtt:
   enabled: false
